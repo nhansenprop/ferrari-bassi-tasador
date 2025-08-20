@@ -1,206 +1,249 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tasación preliminar – Ferrari Bassi</title>
-<style>
-  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial; background:#f6f6f6; margin:0; padding:2rem; }
-  .wrap { max-width: 1000px; margin: 0 auto; }
-  .card { background:#fff; border-radius:14px; padding:16px; box-shadow:0 1px 6px rgba(0,0,0,.06); }
-  .grid { display:grid; gap:16px; }
-  @media(min-width: 900px){ .grid-2 { grid-template-columns: 1.5fr 1fr; } .grid-cols-2{ grid-template-columns:1fr 1fr; } }
-  label { font-size:12px; color:#444; display:block; margin-bottom:6px; }
-  input, select { width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:10px; font-size:14px; }
-  h1 { font-size:22px; margin:0 0 10px; }
-  .muted { color:#666; font-size:12px; }
-  .row { display:flex; gap:8px; align-items:center; }
-  .btn { background:#111; color:#fff; border:0; padding:10px 14px; border-radius:10px; cursor:pointer; }
-  .out { font-weight:700; font-size:22px; }
-  .note { font-size:12px; color:#555; }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ferrari Bassi · Tasación preliminar (CABA)</title>
+  <style>
+    :root {
+      --bg:#0b0d10; --panel:#151a20; --muted:#9fb0c8; --text:#e8eff7; --brand:#3fb389; --bad:#d26b6b; --good:#6bd294;
+    }
+    *{box-sizing:border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"}
+    body{background:var(--bg); color:var(--text); margin:0; padding:22px}
+    h1{margin:0 0 14px; font-weight:800; letter-spacing:.2px}
+    .grid{display:grid; gap:18px; grid-template-columns: 1fr;}
+    @media (min-width:960px){ .grid{grid-template-columns: 1.2fr .8fr} }
+    .card{background:var(--panel); border:1px solid #212934; padding:18px; border-radius:16px; box-shadow:0 8px 26px rgba(0,0,0,.25)}
+    label{display:block; margin:8px 0 6px; color:var(--muted); font-size:.92rem}
+    input, select{width:100%; padding:12px 12px; border-radius:12px; border:1px solid #2a3442; background:#0e1318; color:var(--text); outline:none}
+    input:focus, select:focus{border-color:#3b8fff}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    .row3{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+    .right h2{margin:0 0 6px}
+    .price{font-size:34px; font-weight:800}
+    .muted{color:var(--muted)}
+    .btn{display:inline-block; padding:12px 16px; border-radius:12px; background:var(--brand); color:#07120e; border:none; font-weight:700; cursor:pointer}
+    .btn.secondary{background:#263042; color:#cfe3ff; border:1px solid #36455b}
+    .note{font-size:.92rem; color:#b7c6dc}
+    .inline{display:flex; gap:8px; align-items:center}
+    .chip{padding:6px 10px; border-radius:999px; background:#0e1318; border:1px solid #273140; color:#cfe3ff; font-size:.82rem}
+    .field-suffix{display:flex; gap:8px; align-items:center}
+    .field-suffix input{flex:1}
+    .ok{color:var(--good)} .warn{color:#f2d675} .bad{color:var(--bad)}
+    .divider{height:1px; background:#232d3a; margin:14px 0}
+    a{color:#8ad9ff}
+    small.code{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; color:#9cc3ff}
+  </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="row" style="justify-content:space-between; margin-bottom:16px;">
-    <h1>Ferrari Bassi · Tasación preliminar</h1>
-    <a id="wa" href="#" target="_blank" class="btn" style="text-decoration:none">WhatsApp: solicitar tasación</a>
-  </div>
-
-  <div class="grid grid-2">
+  <h1>Ferrari Bassi · Tasación preliminar</h1>
+  <div class="grid">
     <div class="card">
-      <div class="grid grid-cols-2">
-        <div style="grid-column:1 / -1">
-          <label>Dirección (calle y altura)</label>
-          <input id="address" placeholder="Ej: Av. Callao 1450, CABA">
-          <div class="muted">Versión online simple: sin comparables en vivo. Sirve para captar y estimar YA.</div>
-        </div>
+      <label>Dirección (calle y altura) — CABA</label>
+      <div class="field-suffix">
+        <input id="direccion" placeholder="Ej: Castex 3428" autocomplete="street-address" />
+        <button class="btn secondary" onclick="detectarBarrio()">Detectar barrio</button>
+      </div>
+      <div class="muted" id="barrioStatus" style="margin-top:6px"></div>
 
-        <div>
-          <label>Barrio</label>
-          <select id="barrio"></select>
-        </div>
-        <div>
-          <label>Superficie cubierta (m²)</label>
-          <input id="m2" type="number" min="15" value="60">
-        </div>
+      <label style="margin-top:14px">Superficie cubierta (m²)</label>
+      <input id="sup" type="number" min="10" step="1" value="60"/>
+
+      <div class="row">
         <div>
           <label>Ambientes</label>
-          <input id="amb" type="number" min="1" value="3">
+          <input id="amb" type="number" min="1" step="1" value="2"/>
         </div>
         <div>
           <label>Baños</label>
-          <input id="banos" type="number" min="1" value="1">
+          <input id="ban" type="number" min="1" step="1" value="1"/>
         </div>
+      </div>
+
+      <div class="row">
         <div>
           <label>Piso</label>
-          <input id="piso" type="number" min="0" value="4">
+          <input id="piso" type="number" min="0" step="1" value="3"/>
         </div>
         <div>
           <label>Antigüedad (años)</label>
-          <input id="antig" type="number" min="0" value="40">
-        </div>
-        <div>
-          <label>Estado</label>
-          <select id="estado">
-            <option>A estrenar</option>
-            <option>Excelente</option>
-            <option selected>Muy bueno</option>
-            <option>Bueno</option>
-            <option>A reciclar</option>
-          </select>
-        </div>
-        <div class="row" style="margin-top:8px">
-          <input type="checkbox" id="cochera">
-          <label for="cochera">Cochera</label>
-        </div>
-        <div class="row">
-          <input type="checkbox" id="amenP">
-          <label for="amenP">Pileta</label>
-        </div>
-        <div class="row">
-          <input type="checkbox" id="amenG">
-          <label for="amenG">Gimnasio</label>
-        </div>
-        <div class="row">
-          <input type="checkbox" id="amenS">
-          <label for="amenS">Seguridad 24/7</label>
+          <input id="ant" type="number" min="0" step="1" value="30"/>
         </div>
       </div>
 
-      <div style="margin-top:14px">
-        <label>Ajuste fino sobre $/m² (<span id="ajVal">0</span>%)</label>
-        <input id="aj" type="range" min="-20" max="20" step="1" value="0" style="width:100%">
-        <div class="muted">Base usada: <span id="baseInfo"></span></div>
+      <label>Estado</label>
+      <select id="estado">
+        <option value="-0.12">A reciclar (–12%)</option>
+        <option value="-0.05">Bueno (–5%)</option>
+        <option value="0" selected>Muy bueno (0%)</option>
+        <option value="0.06">Excelente (+6%)</option>
+      </select>
+
+      <div class="row3" style="margin-top:8px">
+        <label class="inline"><input type="checkbox" id="coch"/> Cochera</label>
+        <label class="inline"><input type="checkbox" id="pile"/> Pileta</label>
+        <label class="inline"><input type="checkbox" id="seg"/> Seguridad 24/7</label>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button class="btn" onclick="calcular()">Calcular precio</button>
+        <a id="ctaWsp" class="btn secondary" target="_blank" rel="noopener">WhatsApp: solicitar tasación</a>
+      </div>
+
+      <div class="divider"></div>
+      <div class="note">
+        <b>Fuentes usadas</b>: geocodificación USIG (barrio según dirección) y valor de m² por barrio provisto por Mudafy (actualizado a <span id="fechaFuente">julio 2025</span>). Promedio CABA de respaldo (Zonaprop Index). Esto es <b>orientativo</b>; no reemplaza visita profesional ni verificación documental.
       </div>
     </div>
 
-    <div class="card">
-      <div class="row" style="justify-content:space-between">
-        <span class="muted">Precio sugerido de publicación</span>
-        <span id="pub" class="out">$—</span>
-      </div>
-      <div class="row" style="justify-content:space-between; margin-top:8px">
-        <span class="muted">Precio estimado de cierre (−6,8%)</span>
-        <span id="cierre" class="out">$—</span>
-      </div>
-      <div class="note" style="margin-top:8px">
-        * Rango orientativo: <span id="r1"></span> a <span id="r2"></span>
-      </div>
+    <div class="card right">
+      <h2>Precio sugerido de publicación</h2>
+      <div class="price" id="precioPub">—</div>
+      <div class="muted" id="rango">—</div>
 
-      <div style="margin-top:16px" class="note">
-        <b>Aviso importante</b><br>
-        Esta es una <b>tasación preliminar orientativa</b> basada en promedios de zona y supuestos generales.
-        No reemplaza una visita profesional, análisis de comparables vigentes ni verificación documental.
-        Margen de negociación estimado: <b>6,8%</b> sobre el precio de publicación.
+      <h2 style="margin-top:20px">Precio estimado de cierre (–6,8%)</h2>
+      <div class="price" id="precioCierre">—</div>
+
+      <div class="divider"></div>
+      <div class="note">
+        <div id="barrioInfo">Barrio: —</div>
+        <div id="baseInfo">Base usada: CABA promedio —</div>
+        <div id="ajustesInfo">Ajustes aplicados: —</div>
       </div>
     </div>
   </div>
-</div>
 
-<script>
-const BASE_M2_USD = {
-  "Puerto Madero": 5400,
-  "Recoleta": 2800,
-  "Retiro": 2700,
-  "Palermo": 2900,
-  "Belgrano": 2600,
-  "Núñez": 2400,
-  "Caballito": 2000,
-  "Almagro": 1800,
-  "Microcentro": 1900,
-  "Otra": 1800,
-};
-const ESTADO_FACTOR = {
-  "A estrenar": 1.1,
-  "Excelente": 1.05,
-  "Muy bueno": 1.0,
-  "Bueno": 0.95,
-  "A reciclar": 0.85,
-};
+  <script>
+    // --- Datos reales por barrio (USD/m2) — Fuente: Mudafy (valores a julio 2025)
+    // https://mudafy.com.ar/d/valor-metro-cuadrado-en-caba-por-barrio
+    const preciosMudafy = {
+      "Agronomía":1540, "Almagro":1818, "Balvanera":1449, "Barracas":1488,
+      "Belgrano":2526, "Boedo":1695, "Caballito":1952, "Chacarita":2136,
+      "Colegiales":2334, "Coghlan":1956, "Constitución":1152, "Flores":1652,
+      "Floresta":1365, "La Boca":905, "Liniers":1326, "Mataderos":1190,
+      "Monte Castro":1438, "Monserrat":1540, "Nueva Pompeya":870,
+      "Núñez":2569, "Nuñez":2569, "Palermo":2631, "Parque Avellaneda":1104,
+      "Parque Chacabuco":1758, "Parque Chas":1965, "Parque Patricios":1151,
+      "Paternal":1312, "La Paternal":1312, "Puerto Madero":4681, "Recoleta":2459,
+      "Retiro":1882, "Saavedra":1991, "San Cristóbal":1513, "San Cristobal":1513,
+      "San Nicolás":1785, "San Nicolas":1785, "San Telmo":1831, "Versalles":1288,
+      "Villa Crespo":2085, "Villa Devoto":2151, "Villa Lugano":880, "Villa Luro":1541,
+      "Villa Ortúzar":1941, "Villa Ortu zar":1941, "Villa Ortuzar":1941,
+      "Villa Pueyrredón":1711, "Villa Pueyrredon":1711, "Villa Riachuelo":878,
+      "Villa Santa Rita":1637, "Villa Soldati":681, "Villa Urquiza":2212, "Villa Real":1382
+    };
 
-const $ = (id) => document.getElementById(id);
-const barrioSel = $("barrio");
-Object.keys(BASE_M2_USD).forEach(b => {
-  const o = document.createElement("option");
-  o.value = b; o.textContent = b;
-  if (b === "Recoleta") o.selected = true;
-  barrioSel.appendChild(o);
-});
+    // Promedio CABA de respaldo (departamentos) — Zonaprop Index Jul 2025
+    // https://www.zonaprop.com.ar/noticias/wp-content/uploads/2025/07/INDEX_CABA_REPORTE_2025-07.pdf
+    const CABA_PROMEDIO_USD_M2 = 2440;
 
-function fmt(n){ if(!isFinite(n)) return "—"; const r = Math.round(n/100)*100; return r.toLocaleString("en-US", {style:"currency", currency:"USD", maximumFractionDigits:0}); }
+    // Normaliza textos para comparaciones acento/espacio/caso
+    const norm = s => (s||"").toString().trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').toLowerCase();
 
-function calc() {
-  const barrio = barrioSel.value;
-  const baseM2 = BASE_M2_USD[barrio] || BASE_M2_USD["Otra"];
-  const aj = Number($("aj").value);
-  $("ajVal").textContent = aj;
-  $("baseInfo").textContent = `${barrio}: ${fmt(baseM2)}/m²`;
+    // Estado actual de barrio detectado
+    let barrioDetectado = null;
 
-  const m2 = Number($("m2").value||0);
-  const amb = Number($("amb").value||0);
-  const banos = Number($("banos").value||0);
-  const piso = Number($("piso").value||0);
-  const antig = Number($("antig").value||0);
-  const estado = $("estado").value;
-  const cochera = $("cochera").checked;
-  const amenP = $("amenP").checked;
-  const amenG = $("amenG").checked;
-  const amenS = $("amenS").checked;
+    async function detectarBarrio(){
+      const raw = document.getElementById('direccion').value.trim();
+      if(!raw){
+        document.getElementById('barrioStatus').innerHTML = '<span class="bad">Ingresá calle y altura en CABA.</span>';
+        return;
+      }
 
-  let f = 1;
-  f *= ESTADO_FACTOR[estado] || 1;
-  if (antig > 40) f *= 0.92; else if (antig > 20) f *= 0.96; else if (antig < 10) f *= 1.02;
-  f *= 1 + Math.floor(Math.max(0, piso - 3)/5) * 0.01;
-  if (banos > 1) f *= 1 + (banos-1)*0.02;
-  if (amb > 3) f *= 1 + (amb-3)*0.01;
-  if (amenP) f *= 1.02;
-  if (amenG) f *= 1.01;
-  if (amenS) f *= 1.02;
+      // Partimos por el último token numérico como altura
+      const m = raw.match(/^(.*?)(\d{1,5})([^\d]*)$/);
+      if(!m){
+        document.getElementById('barrioStatus').innerHTML = '<span class="bad">Formato esperado: "Calle 1234".</span>';
+        return;
+      }
+      const calle = m[1].trim();
+      const altura = m[2];
 
-  const m2Adj = baseM2 * (1 + aj/100);
-  const base = m2 * m2Adj * f;
-  const cocheraUSD = cochera ? 8000 : 0;
-  const pub = base + cocheraUSD;
-  const cierre = pub * (1 - 0.068);
+      try{
+        // 1) Intento directo: Datos útiles por calle + altura
+        const url = `https://ws.usig.buenosaires.gob.ar/datos_utiles?calle=${encodeURIComponent(calle)}&altura=${encodeURIComponent(altura)}`;
+        const r = await fetch(url, { headers:{'Accept':'application/json'} });
+        if(!r.ok) throw new Error('USIG respondió con error');
+        const data = await r.json();
+        if(data && data.barrio){
+          barrioDetectado = data.barrio;
+          document.getElementById('barrioStatus').innerHTML = `Barrio detectado: <b>${barrioDetectado}</b>`;
+          calcular();
+          return;
+        }
+        throw new Error('Sin barrio');
+      }catch(e){
+        document.getElementById('barrioStatus').innerHTML = '<span class="warn">No pude detectar barrio por la dirección. Podés escribirlo en el primer renglón (por ahora solo CABA).</span>';
+      }
+    }
 
-  $("pub").textContent = fmt(pub);
-  $("cierre").textContent = fmt(cierre);
-  $("r1").textContent = fmt(cierre*0.97);
-  $("r2").textContent = fmt(cierre*1.03);
+    function precioBaseBarrio(barrio){
+      if(!barrio) return CABA_PROMEDIO_USD_M2;
+      // Busco coincidencia tolerante a acentos
+      const keys = Object.keys(preciosMudafy);
+      const hit = keys.find(k => norm(k) === norm(barrio));
+      return hit ? preciosMudafy[hit] : CABA_PROMEDIO_USD_M2;
+    }
 
-  // WhatsApp
-  const address = $("address").value || "(sin especificar)";
-  const wa = document.getElementById("wa");
-  const msg = encodeURIComponent(`Hola, vi la tasación preliminar y quiero coordinar una visita para una tasación profesional. Dirección: ${address}; Barrio ${barrio}; ${m2} m2; ${amb} amb.; ${banos} baños; piso ${piso}; antigüedad ${antig} años; estado ${estado}${cochera? ", con cochera": ""}.`);
-  wa.href = `https://wa.me/5491160000000?text=${msg}`;
-}
+    function fmtUsd(n){
+      return new Intl.NumberFormat('es-AR',{ style:'currency', currency:'USD', maximumFractionDigits:0}).format(n);
+    }
 
-["barrio","m2","amb","banos","piso","antig","estado","cochera","amenP","amenG","amenS","aj","address"].forEach(id=>{
-  document.getElementById(id).addEventListener("input", calc);
-});
+    function calcular(){
+      const sup = +document.getElementById('sup').value || 0;
+      const amb = +document.getElementById('amb').value || 0;
+      const ban = +document.getElementById('ban').value || 0;
+      const piso = +document.getElementById('piso').value || 0;
+      const ant = +document.getElementById('ant').value || 0;
+      const estado = +document.getElementById('estado').value;
 
-calc();
-</script>
+      // Barrio: si no hay detectado, uso heurística por texto dentro del campo dirección
+      const txtDir = document.getElementById('direccion').value;
+      let barrioTxt = (barrioDetectado || '').trim();
+      // Permitimos que el usuario tipeé "Barrio: Palermo - ..." y lo tome
+      const m = txtDir.match(/barrio\s*[:\-]\s*([^,;]+)/i);
+      if(!barrioTxt && m) barrioTxt = m[1];
+
+      const usdM2 = precioBaseBarrio(barrioTxt);
+
+      // Ajustes simples y transparentes
+      let factor = 1 + estado; // estado general
+
+      if(document.getElementById('coch').checked) factor += 0.04;
+      if(document.getElementById('pile').checked) factor += 0.03;
+      if(document.getElementById('seg').checked)  factor += 0.03;
+
+      // Penalización por antigüedad (suave) y premio por piso alto (si tiene ascensor… ¡se asume!)
+      if(ant > 40) factor -= 0.05; else if(ant > 20) factor -= 0.02;
+      if(piso >= 7) factor += 0.02; // vistas/luz
+
+      // Bonus por distribución/baños en relación a ambientes
+      if(amb >= 3 && ban >= 2) factor += 0.015;
+
+      const precioBase = usdM2 * sup;
+      const publicacion = Math.max(0, precioBase * factor);
+      const cierre = publicacion * (1 - 0.068);
+
+      document.getElementById('precioPub').textContent = fmtUsd(publicacion);
+      document.getElementById('precioCierre').textContent = fmtUsd(cierre);
+      document.getElementById('rango').textContent = `• Rango orientativo: ${fmtUsd(publicacion*0.95)} a ${fmtUsd(publicacion*1.05)}`;
+
+      const barrioMostrado = barrioTxt || '— (promedio CABA)';
+      const baseTxt = (barrioTxt && precioBaseBarrio(barrioTxt) !== CABA_PROMEDIO_USD_M2)
+        ? `Base usada: ${barrioTxt}: ${fmtUsd(usdM2)}/m²`
+        : `Base usada: CABA promedio: ${fmtUsd(CABA_PROMEDIO_USD_M2)}/m²`;
+
+      document.getElementById('barrioInfo').innerHTML = `Barrio: <b>${barrioMostrado}</b>`;
+      document.getElementById('baseInfo').textContent = baseTxt;
+      document.getElementById('ajustesInfo').textContent = `Ajustes (estado/amenities/antigüedad/piso): ${( (factor-1)*100 ).toFixed(1)}%`;
+
+      // CTA WhatsApp con prefill
+      const msg = encodeURIComponent(`Hola! Quiero una tasación profesional. Dirección: ${txtDir}. Barrio: ${barrioMostrado}. Sup: ${sup} m². Precio web sugerido: ${fmtUsd(publicacion)} (cierre ${fmtUsd(cierre)}).`);
+      document.getElementById('ctaWsp').href = `https://wa.me/5491158107778xxxxxxxx?text=${msg}`; // ← poné tu número 👈
+    }
+
+    // Cálculo inicial con defaults
+    calcular();
+  </script>
 </body>
 </html>
